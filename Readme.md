@@ -4,8 +4,6 @@
 ## Project Overview
 This project predicts whether a telecom customer is likely to leave the company's services using Machine Learning classification algorithms.
 
-**Churn** means a customer stops using a company's service.
-
 ## Dataset
 - **Dataset:** Telco Customer Churn
 - **Total Records:** 7,043
