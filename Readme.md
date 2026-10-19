@@ -1,7 +1,7 @@
 
 # ConnectTel Customer Churn Prediction
 
-**Machine Learning Practical 01: "Who Will Leave the Network?"**
+**ML-01: "Who Will Leave the Network?"**
 
 This project uses Machine Learning to predict whether a telecom customer is likely to leave a service provider. It implements and compares two classification algorithms: Decision Tree and Random Forest.
 
