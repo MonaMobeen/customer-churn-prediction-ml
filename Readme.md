@@ -55,6 +55,16 @@ A Random Forest combines predictions from multiple Decision Trees to produce a f
 8. Generate predictions on the test dataset.
 9. Evaluate and compare both models.
 
+## What the Notebook Covers (`churn_final.ipynb`)
+ 
+1. **Problem understanding:** what churn is, cost of false negatives vs false positives, hypotheses, why `customerID` and `Churn` are not inputs, and what the data can and cannot establish.
+2. **Manual split calculations:** Gini and entropy by hand for an 8-customer table, choosing the root split, tree terminology.
+3. **Data audit and leakage-free setup:** 11 blank `TotalCharges` values (all tenure 0) turned into missing values and imputed inside the pipeline; no duplicates; stratified 60% train / 20% validation / 20% sealed test split (`random_state=42`); a dummy baseline.
+4. **Decision Tree:** unrestricted tree, depth curve, `min_samples_leaf` / `min_samples_split`, Gini vs entropy, cost-complexity pruning, a readable depth-3 tree, tracing two customers, stability over three splits.
+5. **Random Forest:** number of trees, `max_features`, bootstrap, out-of-bag score, per-tree averaging, stability over three splits.
+6. **Imbalance, tuning and selection:** `class_weight`, `RandomizedSearchCV` for both models, candidate comparison on validation, threshold choice (0.3 / 0.5 / 0.7), permutation importance.
+7. **Final test evaluation and error analysis:** the selected model is refit on train + validation and scored once on the sealed test set.
+8. **Regression extension and deployment:** trees/forests for `MonthlyCharges`; the final pipeline is saved with `joblib`, with a metadata file and a prediction function that validates its input columns.
 ## Model Configuration
 
 | Parameter | Decision Tree | Random Forest |
@@ -77,7 +87,29 @@ Both models were evaluated on the same test set containing **1,407 customers**.
 | Churn Recall (`Yes`) | 59.6% | 42.2% |
 | Churn F1-score (`Yes`) | 58.8% | 52.2% |
 
-### Results Interpretation
+### Results 
+ 
+### Validation comparison (candidates)
+ 
+| Candidate | F1 | Precision | Recall | Avg. precision |
+|---|---:|---:|---:|---:|
+| Dummy (always "No") | 0.000 | 0.000 | 0.000 | 0.265 |
+| Tuned tree | 0.614 | 0.498 | 0.800 | 0.594 |
+| Pruned tree (best `ccp_alpha`) | 0.535 | 0.595 | 0.487 | 0.517 |
+| **Tuned forest (selected)** | **0.624** | 0.523 | 0.775 | **0.639** |
+ 
+Selected model: Random Forest with `n_estimators=200`, `max_depth=10`, `min_samples_leaf=5`, `max_features="sqrt"`, `class_weight="balanced"`. Threshold 0.5 gave the best validation F1 (0.5743 at 0.3, 0.6243 at 0.5, 0.5740 at 0.7).
+ 
+### Final result on the sealed test set (1,409 customers)
+ 
+| Metric | Value |
+|---|---:|
+| Accuracy | 75.4% |
+| Churn precision | 52.5% |
+| Churn recall | 77.3% |
+| Churn F1 | 62.5% |
+| ROC-AUC | 0.843 |
+| Average precision | 0.653 |
 
 **Decision Tree**
 - Achieved 77.83% accuracy.
@@ -89,7 +121,14 @@ Both models were evaluated on the same test set containing **1,407 customers**.
 - Improved accuracy by approximately 1.63 percentage points.
 - Achieved higher churn precision at 68.4%.
 - Had lower churn recall at 42.2%, meaning it missed more actual churners.
-
+Confusion matrix (rows = actual Stay/Churn, columns = predicted Stay/Churn): `[[773, 262], [85, 289]]`, so the model catches 289 of 374 real churners and wrongly flags 262 customers who stayed.
+ 
+### Interpretation
+ 
+- Contract type is by far the most important input (permutation importance 0.103 F1 drop), followed by InternetService (0.031) and tenure (0.029).
+- Accuracy is lower than an untuned, unweighted forest would show because `class_weight="balanced"` deliberately trades accuracy for recall. A model that predicts "No" for everyone already reaches about 73% accuracy and finds no churners, so accuracy alone is misleading here.
+- A single tree is unstable (validation F1 std 0.038 over three splits) while the forest is steadier (std 0.013).
+- Regression extension: a Random Forest for `MonthlyCharges` reached test MAE 0.99, RMSE 1.38, R2 0.998. This is high because the price is largely determined by the subscribed services.
 ### Which Model Performed Better?
 
 Random Forest achieved higher overall accuracy, while Decision Tree performed better at identifying customers who actually churned.
@@ -143,6 +182,14 @@ Open your project notebook and verify that the dataset path matches your CSV fil
 ### Step 5: Run the Notebook
 
 Execute the notebook cells from top to bottom to preprocess the data, train both models, generate predictions, and compare their performance.
+
+## Saved Model
+ 
+- `churn_pipeline.joblib` - preprocessing + tuned forest, fitted on train + validation
+- `churn_metadata.json` - threshold, model name, seed, scikit-learn version, required input columns
+- `test_predictions.csv` - customerID, actual label, churn probability and prediction for the test set
+- `results_table.csv` - every experiment run in the notebook
+Only load `.joblib` files from sources you trust. The model was saved with scikit-learn 1.9.1, so use the same version (see `requirements.txt`).
 
 ## Limitations
 
