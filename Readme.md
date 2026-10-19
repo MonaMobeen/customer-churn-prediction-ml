@@ -33,7 +33,7 @@ The dataset contains customer profiles, account details, subscribed services, bi
 - NumPy
 - Scikit-learn
 
-## Machine Learning Algorithms
+## ML Algorithms
 
 ### 1. Decision Tree Classifier
 
