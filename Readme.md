@@ -1,7 +1,7 @@
 
 # ConnectTel Customer Churn Prediction
 
-**ML-01: "Who Will Leave the Network?"**
+**ML-01: "Decision Tree and Random Forest"**
 
 This project uses Machine Learning to predict whether a telecom customer is likely to leave a service provider. It implements and compares two classification algorithms: Decision Tree and Random Forest.
 
@@ -160,7 +160,5 @@ Random Forest achieved the highest accuracy of **79.46%**, while Decision Tree a
 
 The experiment demonstrates why model selection should consider multiple evaluation metrics and business objectives rather than accuracy alone.
 
-## Author
-
-**Memoona Mubeen**
+  
 
